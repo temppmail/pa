@@ -1,0 +1,287 @@
+assignment 1
+
+#include <pic18f458.h>
+
+void main(void) 
+{
+    TMR1L=0x9C;
+    TMR1H=0x65;
+    TMR1=TMR1L+TMR1H;
+    
+    
+}
+
+
+
+-----------------------------------------
+
+
+assignment 2
+
+#include <pic18f458.h>
+#include <xc.h>
+
+
+void main(void) {
+    int sum=0;
+    
+    int arr[10]={10,15,20,9};
+    
+    for(int i=0;i<4;i++)
+    {
+        sum=sum+arr[i];
+    }
+    
+    TRISB=0;
+    PORTB=sum;
+}
+
+
+----------------------------------------------
+
+
+assignment 3
+
+
+#include <xc.h>
+#include <pic18f458.h>
+
+void main(void) {
+    TMR1H=0x18;
+    TMR1L=0x09;
+    
+    int ch=0x0F;
+    
+    TRISB=0;
+    TRISC=0;
+     
+     while(1)
+     {
+         if(ch==1)
+         {
+             TMR0=TMR1H*TMR1L;
+             PORTB=TMR0H;
+             PORTC=TMR0L;
+             
+         }
+         
+         if(ch==2)
+         {
+            
+             PORTB=TMR1H/TMR1L;
+             PORTC=TMR1H%TMR1L;
+             
+         }
+         
+         
+     }
+}
+
+
+-------------------------------------------------
+
+
+assignment 4
+
+
+#include<pic18f4550.h>
+#include<stdlib.h>
+#include<stdio.h>
+#include<xc.h>
+
+void Delay();
+void main(void){
+    TRISB=0;
+    PORTB=0x07;
+    while(1){
+    Delay();
+    PORTB=~PORTB;
+}
+return;
+}
+
+void Delay(){
+    T0CON=0x07;
+    TMR1=18720;
+    INTCONbits.TMR0IF=0;
+    T0CONbits.TMR0ON=1;
+    while(INTCONbits.TMR0IF==0);
+    INTCONbits.TMR0IF=0;
+    T0CONbits.TMR0ON=0;
+  return;
+}
+
+
+------------------------------------------------------
+
+
+assignment 5
+
+
+
+#include <xc.h>
+#include<pic18f4550.h>
+#include<math.h>
+#include<stdio.h>
+#include<stdio.h>
+
+int buzz_on=0;
+int count=0;
+
+void t1_isr()
+{
+    if(PIR1bits.TMR1IF==1)
+    {
+        INTCONbits.GIE=0;
+        count++;
+        
+        if(buzz_on==0 && count==40)
+        {
+            buzz_on=1;
+            count=0;
+            PORTAbits.RA5=1;
+        }
+        
+        else if(buzz_on==1 && count==10)
+        {
+            buzz_on=0;
+            count=0;
+            PORTAbits.RA5=0;
+        }
+    }
+    
+    PIR1bits.TMR1IF=0;
+    TMR1=28036;
+    INTCONbits.GIE=1;
+    
+    
+    
+    return;
+}
+
+void main(void)
+{
+    TRISAbits.TRISA5=0;
+    TMR1=28036;
+    T1CON=0x60;
+    
+    PIR1bits.TMR1IF=0;
+    PIE1bits.TMR1IE=0;
+    
+    INTCONbits.PEIE=1;
+    INTCONbits.GIE=1;
+    
+    while(1)
+    {
+        t1_isr();
+    }
+    return;
+}
+
+
+
+----------------------------------------------------------
+
+assignment 6
+
+
+#include<pic18f4550.h>
+
+
+
+void __interrupt() xyz()
+{
+    if(INTCON3bits.INT1IF==1)
+    {
+        INTCONbits.GIE=0;
+        PORTAbits.RA4=1;
+        
+        for(int i=0; i<1000;i++)
+        {
+            for(int j=0; j<1000; j++)
+            {
+                
+            }
+        }
+        
+        PORTAbits.RA4=0;
+        INTCON3bits.INT1IF=0;
+        INTCONbits.GIE=1;
+    }
+}
+
+void main(void)
+{
+    TRISBbits.TRISB1=1;
+    TRISAbits.TRISA4=0;
+    
+    INTCON3bits.INT1IF=0;
+    INTCON3bits.INT1IE=1;
+    
+    INTCON2bits.INTEDG1=1;
+    
+    INTCONbits.GIE=1;
+    INTCONbits.PEIE=1;
+    
+    while(1);
+   
+}
+
+
+
+-------------------------------------------------
+
+
+assignment 7
+
+
+/*      Calculations
+ * Fosc = 48MHz
+ *
+ * PWM Period = [(PR2) + 1] * 4 * TMR2 Prescale Value / Fosc
+ * PWM Period = 200us
+ * TMR2 Prescale = 16
+ * Hence, PR2 =  149 or 0x95
+ *
+ * Duty Cycle = 10% of 200us
+ * Duty Cycle = 20us
+ * Duty Cycle = (CCPR1L:CCP1CON<5:4>) * TMR2 Prescale Value / Fosc
+ * CCP1CON<5:4> = <1:1>
+ * Hence, CCPR1L = 15 or 0x0F
+ */
+
+
+#include<pic18f4550.h>
+
+void main(void)
+{
+    unsigned int i;
+   
+    TRISCbits.TRISC2    = 0;            //CCP1 pin as output
+   
+    CCP1CON  =   0b00011100;            //Select PWM mode; Duty cycle LSB CCP1CON<4:5> = <1:1>
+   
+    T2CON   =   0b00000010;             //Prescalar = 16; Timer2 OFF
+    GIE=1; //Global Interrupt Enable
+    TRISAbits.TRISA4=0; //PORTA pin4 as output
+    while(1)
+    {
+        TMR2=0;
+        PR2     =   250;   //0x95;  
+        CCPR1L   =   2;    //0x0F;      //Duty cycle 10%
+       
+        TMR2IF=0;
+        TMR2ON = 1;                     //Timer2 ON
+        for(int i=2;i<255;i+=50)
+        {
+            CCPR1L=i; //For Decreasing the speed  
+            for(int j=0;j<1000;j++)
+                for(int k=0;k<10000;k++);
+                PORTAbits.RA4=~PORTAbits.RA4;
+        }
+    }
+}
+
+
+
+----------------------------------------------------------
